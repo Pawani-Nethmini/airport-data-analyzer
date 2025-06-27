@@ -1,13 +1,12 @@
-# Task A: Input Validation
-
 from graphics import *
 import csv
 from datetime import datetime
+
+# Task A: Input Validation
 def get_valid_filename():
 
-    # Example list from Table 2 (you can replace it with actual list)
+    # Example list
     valid_city_codes = ['CDG', 'BCN', 'LHR', 'FRA', 'AMS']
-        # --- DISPLAY CONFIRMATION ---
     airport_names = {
         'CDG': 'Paris Charles de Gaulle airport',
         'BCN': 'Barcelona airport',
@@ -29,7 +28,6 @@ def get_valid_filename():
     # --- YEAR INPUT ---
     while True:
         year_input = input("Please enter the year required in the format YYYY: ")
-        
         if not year_input.isdigit() or len(year_input) != 4:
             print("Wrong data type - please enter a four-digit year value")
         else:
@@ -123,15 +121,12 @@ def load_csv(CSV_chosen):
             outcomes.append(f"The most common destinations are {', '.join(longnames_most_common_des)}")
 
             
-            
-            
             # Prepare outcomes to return
-            return outcomes
-
+            return outcomes, content
 
     except FileNotFoundError:
         print("File does not exist.")
-        return[]
+        return[], []
 
 # Display Results
 def display_outcomes(file_path, outcomes):
@@ -140,7 +135,6 @@ def display_outcomes(file_path, outcomes):
     for outcome in outcomes:
           print(outcome)
     print("************************************\n")
-
 
 
 
@@ -160,102 +154,65 @@ def save_results_to_file(outcomes, city_code, year, airport_name, file_name="res
         print(f"Error saving to file: {e}")
 
 
-def validate_continue_input():
-    while True:
-        again = input("Do you want to select another data file for a different date? Y/N: ").strip().lower()
-        if again in ['y', 'n']:
-            return again
-        else:
-            print("Please enter 'Y' or 'N'.")
-
-
-while True:
-    selected_data_file, city_code, year, airport_name = get_valid_filename()
-    outcomes = load_csv(selected_data_file)
-
-    if outcomes:
-        display_outcomes(selected_data_file, outcomes)
-        save_results_to_file(outcomes, city_code, year, airport_name)
-
-    if validate_continue_input() == 'n':
-        print("Program Ended.")
-        break
-
-
-    
-'''
-while True:
-    File_Name = validate_date_input()
-    outcomes = process_csv_data(File_Name)
-
-    if outcomes:
-        display_outcomes(outcomes)
-    else:
-        continue
-    save_results_to_file(outcomes)
-
-    repeat_programme = validate_continue_input()
-
-    if repeat_programme == 'Y':
-        continue
-    elif repeat_programme == 'N':
-        print("Program Ended")
-        break
-'''
-
-
-          
-
 # Task D: Histogram Display
 
 def plot_histogram(data, airline_code, airline_name, airport_name, year):
-    
     win = GraphWin(f"{airline_name} Departures Histogram", 800, 600)
     win.setBackground("white")
 
-#Draw axis
-x_axis = Line(Point(50 ,550), Point(750, 550))
-x_axis.draw(win)
-y_axis = Line(Point(50 ,50), Point(50, 550))
-y_axis.draw(win)
+    #Draw axis
+    x_axis = Line(Point(50 ,550), Point(750, 550))
+    x_axis.draw(win)
+    
+    #Draw Grid Lines and Y-axis Labels
+    max_count = max(data.values()) if data else 1
 
-#Draw title
-title = Text(Point(400, 20), f"{airline_name} Departures from {airport_name}, {year}")
-title.setSize(14)
-title.setStyle("bold")
-title.draw(win)
+    #Draw x-axis label
+    x_label =Text(Point(390,590), "Hours 00:00 to 12:00")
+    x_label.setSize(12)
+    x_label.draw(win)
 
-#Scale bars to fit the window
-max_count = max(data.values()) if data else 1
-bar_width = 50
-spacing = 15
-for i, hour in enumerate(sorted(data.keys())):
-    count = data[hour]
-    height = int((count / max_count) * 400)
-    x1 = 70 + i * (bar_width + spacing)
-    x2 = x1 + bar_width
-    y1 = 550 - height
-    y2 = 550
+    #Draw title
+    title = Text(Point(400, 20), f"{airline_name} Departures from {airport_name}, {year}")
+    title.setSize(14)
+    title.setStyle("bold")
+    title.draw(win)
 
-    # Draw bar
-    bar = Rectangle(Point(x1, y1), Point(x2, y2))
-    bar.setFill("skyblue")
-    bar.setOutline("black")
-    bar.draw(win)
+    #Scale bars to fit the window
+    bar_width = 40
+    spacing = 10
+    colors = ["lightgreen"]
+    
+    for i, hour in enumerate(sorted(data.keys())):
+        count = data[hour]
+        height = int((count / max_count) * 400)
+        x1 = 60 + i * (bar_width + spacing)
+        x2 = x1 + bar_width
+        y1 = 550 - height
+        y2 = 550
 
-    # Draw count above bar
-    label = Text(Point((x1 + x2) / 2, y1 - 10), str(count))
-    label.setSize(10)
-    label.draw(win)
+        # Draw bar
+        bar = Rectangle(Point(x1, y1), Point(x2, y2))
+        bar.setFill(colors[i % len(colors)])
+        bar.setOutline("black")
+        bar.draw(win)
 
-    # Draw hour below bar
-    hour_label = Text(Point((x1 + x2) / 2, 560), hour)
-    hour_label.setSize(10)
-    hour_label.draw(win)
+        # Draw count above bar
+        label = Text(Point((x1 + x2) / 2, y1 - 10), str(count))
+        label.setSize(10)
+        label.draw(win)
 
-# Wait for user to close window
-win.getMouse()
-win.close()
+        # Draw hour below bar
+        hour_label = Text(Point((x1 + x2) / 2, 560), f"{hour}:00")
+        hour_label.setSize(10)
+        hour_label.draw(win)
+
+    # Wait for user to close window
+    try:
+        win.getMouse()
+    except GraphicsError:
+        pass
+    win.close()
 
 def handle_histogram_request(content, airport_name, year):
     valid_airlines = {
@@ -263,7 +220,18 @@ def handle_histogram_request(content, airport_name, year):
         'AF': 'Air France',
         'LH': 'Lufthansa',
         'KL': 'KLM',
-        'IB': 'Iberia'
+        'IB': 'Iberia',
+        'AY': 'Finnair',
+        'SK': 'Scandinavian Airlines',
+        'TP': 'TAP Air Portugal',
+        'TK': 'Turkish Airlines',
+        'W6': 'Wizz Air',
+        'U2': 'easyJet',
+        'FR': 'Ryanair',
+        'A3': 'Aegean Airlines',
+        'SN': 'Brussels Airlines',
+        'EK': 'Emirates',
+        'QR': 'Qatar Airways',
     }
 
     while True:
@@ -274,8 +242,7 @@ def handle_histogram_request(content, airport_name, year):
             print("Unavailable Airline code please try again.")
 
     # Count flights per hour for selected airline
-    hourly_counts = {f"{str(h).zfill(2)}": 0 for h in range(12)}  # 00 to 11
-
+    hourly_counts = {f"{str(h).zfill(2)}": 0 for h in range(12)}
     for row in content:
         if row[1].startswith(airline_code):
             hour = row[2][:2]
@@ -284,9 +251,10 @@ def handle_histogram_request(content, airport_name, year):
 
     plot_histogram(hourly_counts, airline_code, valid_airlines[airline_code], airport_name, year)
 
+#Task - Loop
 def validate_continue_input():
     while True:
-        again = input("Do you want to select another data file for a different date? Y/N: ").strip().lower()
+        again = input("Do you want to select another data file for a different date? Y/N: ").lower()
         if again in ['y', 'n']:
             return again
         else:
@@ -295,208 +263,16 @@ def validate_continue_input():
 
 while True:
     selected_data_file, city_code, year, airport_name = get_valid_filename()
-    outcomes = load_csv(selected_data_file)
+    outcomes, content = load_csv(selected_data_file)
 
     if outcomes:
         display_outcomes(selected_data_file, outcomes)
         save_results_to_file(outcomes, city_code, year, airport_name)
+        handle_histogram_request(content, airport_name, year)
 
     if validate_continue_input() == 'n':
         print("Program Ended.")
         break
-
-
-'''
-import tkinter as tk
-from collections import defaultdict
-
-class HistogramApp:
-    def __init__(self, traffic_data, date):
-        self.traffic_data = traffic_data
-        self.date = date
-        self.root = tk.Tk()
-        self.root.title(f"Traffic Data Histogram - {self.date}")
-        self.canvas = tk.Canvas(self.root, width=1300, height=600, bg="white")
-        self.canvas.pack()
-
-    def draw_histogram(self):
-        hourly_data = defaultdict(lambda: [0, 0])  # [Elm Ave Count, Hanley Hwy Count]
-
-        for row in self.traffic_data:
-            junction, time_of_day = row[0], row[2]
-            hour = int(time_of_day.split(":")[0])
-            if junction == "Elm Avenue/Rabbit Road":
-                hourly_data[hour][0] += 1
-            elif junction == "Hanley Highway/Westway":
-                hourly_data[hour][1] += 1
-
-        bar_width = 20
-        max_count = max(
-            max(counts[0], counts[1]) for counts in hourly_data.values()
-        )
-        scale_factor = 400 / max_count if max_count > 0 else 1
-
-        # Draw the x-axis and y-axis
-        self.canvas.create_line(40, 450, 1300, 450, width=2)  # x-axis
-        self.canvas.create_line(40, 450, 40, 50, width=2)     # y-axis
-        
-        # Add labels to the y-axis (vehicle counts)
-        for i in range(0, max_count + 1, max(1, max_count // 10)):
-            y_position = 450 - i * scale_factor
-            self.canvas.create_line(35, y_position, 45, y_position, width=1)
-            self.canvas.create_text(25, y_position, text=str(i), anchor="e", font=("Arial", 10))
-        
-        # Draw bars and labels for each hour
-        for hour in range(24):
-            counts = hourly_data[hour]
-            x_start = 50 + hour * (2 * bar_width + 10)
-            x_mid = x_start + bar_width
-            x_end = x_mid + bar_width
-
-            # Draw bars for Elm Avenue/Rabbit Road
-            self.canvas.create_rectangle(
-                x_start, 450 - counts[0] * scale_factor, x_mid, 450, fill="#AFE1AF"
-            )
-            self.canvas.create_text(
-                (x_start + x_mid) / 2, 450 - counts[0] * scale_factor - 10,
-                text=str(counts[0]), fill="#000000", font=("Arial", 8)
-            )
-
-            # Draw bars for Hanley Highway/Westway
-            self.canvas.create_rectangle(
-                x_mid, 450 - counts[1] * scale_factor, x_end, 450, fill="#FFFFC5"
-            )
-            self.canvas.create_text(
-                (x_mid + x_end) / 2, 450 - counts[1] * scale_factor - 10,
-                text=str(counts[1]), fill="#000000", font=("Arial", 8)
-            )
-
-            # Draw hour labels on the x-axis
-            self.canvas.create_text(
-                (x_start + x_end) / 2, 460, text=f"{hour}:00", anchor="n", font=("Arial", 8)
-            )
-
-        # Add axis labels and histogram title
-        self.canvas.create_text(
-            400, 15, text=f"Histogram of Vehical Frequency per Hour ({self.date})", font=("Arial", 15, "bold"), anchor="w"
-        )
-        self.canvas.create_text(
-            700, 500, text="Time (hours)", font=("Arial", 12), anchor="w"
-        )
-        self.canvas.create_text(
-            20, 250, text="Vehicle Count", font=("Arial", 12), anchor="center", angle=90
-        )
-        self.canvas.create_rectangle(
-            50, 45, 75, 70, fill="#AFE1AF", outline="#000000", width=2
-        )
-        self.canvas.create_text(
-            80, 57.5, text="Elm Avenue/Rabbit Road", font=("Arial", 10), fill="#000000", anchor="w"
-        )
-        self.canvas.create_rectangle(
-            50, 75, 75, 100, fill="#FFFFC5", outline="#000000", width=2
-        )
-        self.canvas.create_text(
-            80, 87.5, text="Hanley Highway/Westway", font=("Arial", 10), fill="#000000", anchor="w"
-        )
-
-    def run(self):
-        self.draw_histogram()
-        self.root.mainloop()
-
-# Task E: Code Loops to Handle Multiple CSV Files
-class MultiCSVProcessor:
-    def __init__(self):
-        self.current_data = None
-
-    def load_csv_file(self, file_path):
-        try:
-            with open(file_path, "r") as file:
-                lines = file.readlines()[1:]  # Skip header
-                self.current_data = [line.strip().split(",") for line in lines]
-            return True
-        except FileNotFoundError:
-            print("Error: File not found.")
-            return False
-
-    def process_data_and_display_histogram(self, date):
-        if self.current_data:
-            app = HistogramApp(self.current_data, date)
-            app.run()
-
-    def handle_user_interaction(self):
-        while True:
-            # Step 1: Ask if the user wants to load another histogram
-            user_choice = input("Do you want to load the histogram? (Y/N): ").strip().upper()
-        
-            if user_choice == "Y":
-                # Step 2: Collect the date, month, and year as separate inputs
-                while True:
-                    try:
-                        DD = int(input("Enter the day (DD): "))
-                        if DD < 1 or DD > 31:
-                            print("Out of range - values must be in the range 1 and 31")
-                            continue
-
-                        MM = int(input("Enter the month (MM): "))
-                        if MM < 1 or MM > 12:
-                            print("Out of range - values must be in the range 1 and 12")
-                            continue
-
-                        YYYY = int(input("Enter the year (YYYY): "))
-                        if YYYY < 2000 or YYYY > 2024:
-                            print("Out of range - values must be in the range 2000 and 2024")
-                            continue
-
-                        # Combine inputs into the desired filename format
-                        file_path = f"traffic_data{DD:02d}{MM:02d}{YYYY}.csv"
-                        
-                        # Check leap years
-                        def is_leap_year(YYYY):
-                            return(YYYY % 4 == 0)
-
-                        # Check the validation logic 
-                        if 1 <= DD <= 31 and 1 <= MM <= 12 and 2000 <= YYYY <= 2024:
-                            # Chech maximum days for each month
-                            if MM in [1,3,5,7,8,10,12]:    # Months with 31 days
-                                max_days = 31
-                            elif MM in [4,6,9,11]:    # Months with 30 days
-                                max_days = 30    
-                            elif MM == 2:    # February
-                                max_days = 29 if is_leap_year(YYYY) else 28
-                            else:
-                                max_days = 0    # Invalid month
-                                
-                            # Check if the day is valid:
-                            if 1 <= DD <= max_days:
-                                date = f"{DD}/{MM}/{YYYY}"
-                            
-                            else:
-                                print("Invalid data check day, month and year")
-                        else:
-                            pass
-                    
-                        if self.load_csv_file(file_path):
-                            self.process_data_and_display_histogram(f"{DD:02d}/{MM:02d}/{YYYY}")
-                            break
-                        
-                        else:
-                            print("File not found or failed to process. Please try again.")
-
-                    except ValueError:
-                        print("Integer required")
-                        
-            # Exit from the programme           
-            elif user_choice == "N":
-                        print("Exiting program.")
-                        break
-                    
-            else:
-                print("Invalid input. Please enter 'Y' or 'N'.")
-
-if __name__ == "__main__":
-    processor = MultiCSVProcessor()
-    processor.handle_user_interaction()
-'''    
     
 
 

@@ -251,7 +251,7 @@ def handle_histogram_request(content, airport_name, year):
 
     plot_histogram(hourly_counts, airline_code, valid_airlines[airline_code], airport_name, year)
 
-#Task - Loop
+#Task E - Loop
 def validate_continue_input():
     while True:
         again = input("Do you want to select another data file for a different date? Y/N: ").lower()
